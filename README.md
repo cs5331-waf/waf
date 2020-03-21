@@ -9,7 +9,7 @@ Below are the python packages required:
 Use `pip` to install the required packages before running the program.
 
 ## Instructions to use
-To start the WAF, use `python main.py <port-to-listen> <web-app-port>`.
+To start the WAF, use `python main.py <port-to-listen> <web-app-address>`.
 
 `waf_handler.py` handles the functionality of the WAF. The `do_GET`
 and `do_POST` methods of the handler handles the respective requests.

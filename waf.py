@@ -2,7 +2,16 @@ from http.server import BaseHTTPRequestHandler,HTTPServer
 from werkzeug import urls
 
 
+# Class necessary to pass in `app_address` argument
+class WAFServer(HTTPServer):
+    def __init__(self, server_address, RequestHandlerClass, app_address):
+        HTTPServer.__init__(self, server_address, RequestHandlerClass)
+        self.app_address = app_address
+
+
 class WAFHandler(BaseHTTPRequestHandler):
+    def __init__(self, request, client_address, server):
+        BaseHTTPRequestHandler.__init__(self, request, client_address, server)
 
     # Handler for the GET requests
     def do_GET(self):
@@ -23,6 +32,7 @@ class WAFHandler(BaseHTTPRequestHandler):
         if check_para_pollution(path):
             msg += u"HTTP parameter pollution detected"
 
+        print(self.server.app_address)
         self.send_response(200)
         self.send_header('Content-type','text/html')
         self.end_headers()
