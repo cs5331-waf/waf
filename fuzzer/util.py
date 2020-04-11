@@ -1,3 +1,7 @@
-from collections import defaultdict
+def form_cookie(cookie_list):
+    cookie_str = ""
+    for cookie in cookie_list:
+        cookie_str += cookie['name'] + "=" + cookie['value']
+        cookie_str += "; "
 
-fuzzer_dict = defaultdict(list)
+    return {'Cookie': cookie_str}
