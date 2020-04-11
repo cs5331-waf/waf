@@ -54,7 +54,7 @@ class Spider:
                 elif "submit" in input_el.get_attribute("type"):
                     input_el.click()
                 else:
-                    self.fuzzer.hpp_fuzz(url, input_el, self.driver.get_cookies())
+                    self.fuzzer.hpp_fuzz(url, input_els, self.driver.get_cookies())
 
             a_els = self.driver.find_elements_by_tag_name("a")
             for a_el in a_els:
