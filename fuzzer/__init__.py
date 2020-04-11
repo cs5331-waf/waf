@@ -1,3 +1,4 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 from werkzeug.datastructures import MultiDict
@@ -18,7 +19,7 @@ class Fuzzer:
         ]
 
         self.invalid_input_type = ["submit", "button", "hidden"]
-        self.values = ["var1", "var2", "var3"]
+        self.values = ["var1", "var2"]
 
     def hpp_fuzz(self, url, input_els, cookie_list):
         """
@@ -54,7 +55,7 @@ class Fuzzer:
             rsp = requests.get(get_url, verify=False, headers=cookie)
 
             # util.display_in_browser(rsp)
-            polluted_rsp.append(rsp.content)
+            polluted_rsp.append(rsp)
 
         return self.compare_rsp(polluted_rsp)
 
@@ -64,10 +65,19 @@ class Fuzzer:
         :param polluted_rsp: Response from server
         :return:
         """
-        # TODO: Need to find payload in the response as well
-        if polluted_rsp[0] == polluted_rsp[1] == polluted_rsp[2]:
-            return ('HPP', 0), vul_database.vul_list[('HPP', 0)]
-        if polluted_rsp[0] == polluted_rsp[1]:
-            return ('HPP', 1), vul_database.vul_list[('HPP', 1)]
-        elif polluted_rsp[0] == polluted_rsp[2]:
-            return ('HPP', 2), vul_database.vul_list[('HPP', 2)]
+
+        # To prevent false positives, we check for the payload in the unpolluted request
+        payload_found = False
+        soup = BeautifulSoup(polluted_rsp[0].text, "html.parser")
+        for v in self.values:
+            if soup.find(text=re.compile(v)) is not None:
+                payload_found = True
+
+        if payload_found:
+            if polluted_rsp[0].content == polluted_rsp[1].content == polluted_rsp[2].content:
+                return ('HPP', 0), vul_database.vul_list[('HPP', 0)]
+            if polluted_rsp[0].content == polluted_rsp[1].content:
+                return ('HPP', 1), vul_database.vul_list[('HPP', 1)]
+            elif polluted_rsp[0].content == polluted_rsp[2].content:
+                return ('HPP', 2), vul_database.vul_list[('HPP', 2)]
+        return None
