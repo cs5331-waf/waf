@@ -20,6 +20,7 @@ class Spider:
     def crawl(self, base_url, cred):
         visited_url_list = set()    # List of URL that were visited
         url_q = set()               # A queue to store URLs to visit
+        web_app_config = {}
 
         url_q.add(base_url)
         parsed_base_url = urlparse(base_url)
@@ -27,12 +28,17 @@ class Spider:
             try:
                 url = url_q.pop()
                 visited_url_list.add(url)
-                sites_found = self.scrape_page(parsed_base_url, url, cred)
+                sites_found, configs_found = self.scrape_page(parsed_base_url, url, cred)
                 for site in sites_found:
                     if site not in visited_url_list:
                         url_q.add(site)
+                for config_found in configs_found:
+                    if config_found[0][0] not in web_app_config.keys():
+                        web_app_config[config_found[0][0]] = config_found[1]
             except Exception as e:
                 print("Crawling failed", e, flush=True)
+
+        return web_app_config
 
     def scrape_page(self, parsed_base_url, url, cred):
         """
@@ -41,6 +47,8 @@ class Spider:
         :return: a list of links found within the page
         """
         sites_found = []
+        config_found = []
+
         try:
             self.driver.get(url)
             input_els = self.driver.find_elements_by_tag_name("input")
@@ -54,7 +62,7 @@ class Spider:
                 elif "submit" in input_el.get_attribute("type"):
                     input_el.click()
                 else:
-                    self.fuzzer.hpp_fuzz(url, input_els, self.driver.get_cookies())
+                    config_found.append(self.fuzzer.hpp_fuzz(url, input_els, self.driver.get_cookies()))
 
             a_els = self.driver.find_elements_by_tag_name("a")
             for a_el in a_els:
@@ -66,5 +74,5 @@ class Spider:
         except Exception as e:
             print(e)
 
-        return sites_found
+        return sites_found, config_found
 

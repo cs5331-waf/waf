@@ -1,10 +1,10 @@
-import random
 import requests
+from bs4 import BeautifulSoup
 from werkzeug.datastructures import MultiDict
 from werkzeug.urls import url_encode
-from bs4 import BeautifulSoup
 
 import fuzzer.util
+import vul_database
 
 class Fuzzer:
     def __init__(self):
@@ -17,6 +17,7 @@ class Fuzzer:
             ["var2", "var1"]
         ]
 
+        self.invalid_input_type = ["submit", "button", "hidden"]
         self.values = ["var1", "var2", "var3"]
 
     def hpp_fuzz(self, url, input_els, cookie_list):
@@ -33,7 +34,7 @@ class Fuzzer:
 
         for input_el in input_els:
             type = input_el.get_attribute("type")
-            if "submit" not in type and "button" not in type:
+            if type not in self.invalid_input_type:
                 para_name = input_el.get_attribute("name")
                 para_name_list.append(para_name)
 
@@ -55,7 +56,7 @@ class Fuzzer:
             # util.display_in_browser(rsp)
             polluted_rsp.append(rsp.content)
 
-        self.compare_rsp(polluted_rsp)
+        return self.compare_rsp(polluted_rsp)
 
     def compare_rsp(self, polluted_rsp):
         """
@@ -63,9 +64,10 @@ class Fuzzer:
         :param polluted_rsp: Response from server
         :return:
         """
+        # TODO: Need to find payload in the response as well
         if polluted_rsp[0] == polluted_rsp[1] == polluted_rsp[2]:
-            print("HPP is ineffective")
-        elif polluted_rsp[0] == polluted_rsp[1]:
-            print("1st parameter has precedence")
+            return ('HPP', 0), vul_database.vul_list[('HPP', 0)]
+        if polluted_rsp[0] == polluted_rsp[1]:
+            return ('HPP', 1), vul_database.vul_list[('HPP', 1)]
         elif polluted_rsp[0] == polluted_rsp[2]:
-            print("2nd parameter has precedence")
+            return ('HPP', 2), vul_database.vul_list[('HPP', 2)]

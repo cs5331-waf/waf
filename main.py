@@ -12,8 +12,9 @@ def main(config):
         cred["PASS"] = input("Password: ")
 
     print(time.asctime(), "Web App Spider started crawling %s" % (config["APP_ADDRESS"]))
-    app_spider.crawl(config["APP_ADDRESS"], cred)
+    web_app_config = app_spider.crawl(config["APP_ADDRESS"], cred)
 
+    print(web_app_config)
     app_spider.teardown()
     print(time.asctime(), "WAF finished crawling")
 
