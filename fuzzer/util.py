@@ -34,11 +34,14 @@ def clean_html(soup):
     for script in soup(["script", "style"]):
         script.extract()
 
+    # note that `get_text` does not seperate text in different elements with '\n'
     text = soup.get_text()
+
     # break into lines and remove leading and trailing space on each
     lines = (line.strip() for line in text.splitlines())
     # # break multi-headlines into a line each
     # chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
     # drop blank lines
     text = ' '.join(line for line in lines if line)
+
     return text

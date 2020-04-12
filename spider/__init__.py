@@ -1,4 +1,5 @@
 import fuzzer
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from urllib.parse import urlparse
@@ -22,6 +23,11 @@ class Spider:
 
         url_q.add(base_url)
         parsed_base_url = urlparse(base_url)
+
+        # Get characteristics of server
+        rsp = requests.get(base_url, verify=False)
+        server_type = rsp.headers['Server']
+
         while len(url_q) > 0:
             try:
                 url = url_q.pop()
@@ -71,7 +77,7 @@ class Spider:
                 if parsed_site_found.netloc == parsed_base_url.netloc:
                     sites_found.append(a_el.get_attribute("href"))
         except Exception as e:
-            print(e)
+            print("Error found in `scrape_page`:", e)
 
         return sites_found, config_found
 
