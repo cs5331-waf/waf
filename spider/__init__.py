@@ -1,6 +1,4 @@
 import fuzzer
-import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from urllib.parse import urlparse
@@ -32,6 +30,7 @@ class Spider:
                 for site in sites_found:
                     if site not in visited_url_list:
                         url_q.add(site)
+                configs_found = [config_found for config_found in configs_found if config_found]
                 for config_found in configs_found:
                     if config_found[0][0] not in web_app_config.keys():
                         web_app_config[config_found[0][0]] = config_found[1]
@@ -62,7 +61,7 @@ class Spider:
                 elif "submit" in input_el.get_attribute("type"):
                     input_el.click()
                 else:
-                    config_found.append(self.fuzzer.hpp_fuzz(url, input_els, self.driver.get_cookies()))
+                    config_found.append(self.fuzzer.hpp_fuzz(self.driver, url, input_els, self.driver.get_cookies()))
 
             a_els = self.driver.find_elements_by_tag_name("a")
             for a_el in a_els:

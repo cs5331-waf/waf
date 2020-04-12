@@ -3,7 +3,6 @@ import string
 import webbrowser
 
 
-
 def form_cookie(cookie_list):
     cookie_str = ""
     for cookie in cookie_list:
@@ -23,3 +22,23 @@ def display_in_browser(rsp, file_name="response.html"):
 
 def generate_random_string(n=8):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=n))
+
+
+def clean_html(soup):
+    """
+    Remove all javascript and stylesheet code and
+    cleanup whitespaces
+    """
+
+    # remove all javascript and stylesheet code
+    for script in soup(["script", "style"]):
+        script.extract()
+
+    text = soup.get_text()
+    # break into lines and remove leading and trailing space on each
+    lines = (line.strip() for line in text.splitlines())
+    # # break multi-headlines into a line each
+    # chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    # drop blank lines
+    text = ' '.join(line for line in lines if line)
+    return text
