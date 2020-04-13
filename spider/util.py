@@ -1,6 +1,9 @@
 import os.path
+from collections import namedtuple
 from urllib.parse import urlparse
 
+# Declare namedtuple()
+VulPage = namedtuple('VulPage', ('vul', 'vul_type', 'url'))
 
 def construct_full_url(link, parsed_url):
     parsed_link = urlparse(link)

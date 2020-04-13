@@ -30,11 +30,11 @@ def clean_html(soup):
     cleanup whitespaces
     """
 
-    # remove all javascript and stylesheet code
-    for script in soup(["script", "style"]):
+    # remove all HTML script and stylesheet iframe and image code
+    for script in soup(["script", "style", "iframe", "img"]):
         script.extract()
 
-    # note that `get_text` does not seperate text in different elements with '\n'
+    # note that `get_text` does not separate text in different elements with '\n'
     text = soup.get_text()
 
     # break into lines and remove leading and trailing space on each
