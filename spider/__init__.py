@@ -1,4 +1,5 @@
 import fuzzer
+import vscanner
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -11,6 +12,7 @@ class Spider:
     def __init__(self, driver_path="C:/Program Files (x86)/Google/Chrome/Application/"
                                    "chromedriver_win32/chromedriver.exe"):
         self.fuzzer = fuzzer.Fuzzer()
+        self.vscanner = vscanner.Vscanner()
         self.driver = webdriver.Chrome(executable_path=driver_path)
 
     def teardown(self):
@@ -80,4 +82,3 @@ class Spider:
             print("Error found in `scrape_page`:", e)
 
         return sites_found, config_found
-
