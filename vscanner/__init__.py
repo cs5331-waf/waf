@@ -23,6 +23,8 @@ class Vscanner:
             self.vuln_pages.append(str)
 
     def test_page(self, crafted_url, driver):
+        driver.execute_script("window.open('');")
+        driver.switch_to.window(driver.window_handles[-1])
         driver.get(crafted_url)
 
         html = driver.page_source
@@ -30,6 +32,8 @@ class Vscanner:
 
         for link in soup.find_all('a'):
             if link.has_attr('href') and self.pollute_str in link.get('href'):
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
                 return True
 
         forms = soup.find_all('form')
@@ -37,19 +41,26 @@ class Vscanner:
         for form in forms:
             body_params = {}
             if form.has_attr('action') and self.pollute_str in form.get('action'):
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
                 return True
+
+        driver.close()
+        driver.switch_to.window(driver.window_handles[-1])
         return False
 
-    def vscan(self, url, driver, url_response):
+    def vscan(self, url, driver):
         base_url = ""
         if '?' in url:
             base_url = url.rsplit('?', 1)[0]
         else:
             base_url = url.rsplit('#', 1)[0]
 
+        driver.execute_script("window.open('');")
+        driver.switch_to.window(driver.window_handles[-1])
         driver.get(url)
 
-        html = url_response
+        html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
 
         url_params = parse_qs(urlparse(curr_url).query)
@@ -71,7 +82,9 @@ class Vscanner:
                     continue
                 if input.has_attr('name'):
                     body_params.update({input['name']: input.get('value', '')})
-
+        # Close new window
+        driver.close()
+        driver.switch_to.window(driver.window_handles[-1])
         # After extraction, form into 3 groups
         group_a = {k:v for k,v in url_params.items() if k in body_params}
 
@@ -110,3 +123,5 @@ class Vscanner:
         crafted_url = crafted_url + self.pollute_str
         if test_page(self, crafted_url, driver):
             log_vuln_pages(self, 'C', base_url, 'NIL')
+
+    
