@@ -56,22 +56,21 @@ class Vscanner:
         body_params = {}
 
         for link in soup.find_all('a'):
-            if link.has_attr('href'):
+            if link.has_attr('href') and not urlparse(link.get('href')).query:
                 body_params.update(parse_qs(urlparse(link.get('href')).query))
 
         forms = soup.find_all('form')
 
         for form in forms:
-            body_params = {}
-            if form.has_attr('action'):
+            if form.has_attr('action') and not urlparse(form.get('action')).query:
                 body_params.update(parse_qs(urlparse(form.get('action')).query))
 
-        for input in form.find_all('input'):
-            input_type = input.get('type')
-            if input_type in self.ignored_input_type:
-                continue
-            if input.has_attr('name'):
-                body_params.update({input['name']: input.get('value', '')})\
+            for input in form.find_all('input'):
+                input_type = input.get('type')
+                if input_type in self.ignored_input_type:
+                    continue
+                if input.has_attr('name'):
+                    body_params.update({input['name']: input.get('value', '')})
 
         # After extraction, form into 3 groups
         group_a = {k:v for k,v in url_params.items() if k in body_params}
