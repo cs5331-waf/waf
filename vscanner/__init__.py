@@ -33,7 +33,7 @@ class Vscanner:
         for link in soup.find_all('a'):
             if link.has_attr('href') and self.pollute_str in link.get('href'):
                 driver.close()
-                driver.switch_to.window(driver.window_handles[0])
+                driver.switch_to.window(driver.window_handles[-1])
                 return True
 
         forms = soup.find_all('form')
@@ -42,7 +42,7 @@ class Vscanner:
             body_params = {}
             if form.has_attr('action') and self.pollute_str in form.get('action'):
                 driver.close()
-                driver.switch_to.window(driver.window_handles[0])
+                driver.switch_to.window(driver.window_handles[-1])
                 return True
 
         driver.close()
@@ -123,5 +123,3 @@ class Vscanner:
         crafted_url = crafted_url + self.pollute_str
         if test_page(self, crafted_url, driver):
             log_vuln_pages(self, 'C', base_url, 'NIL')
-
-    
