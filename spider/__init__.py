@@ -76,6 +76,7 @@ class Spider:
 
         try:
             self.driver.get(url)
+            self.vscanner.vscan(self.vscanner, url, self.driver)
             input_els = self.driver.find_elements_by_tag_name("input")
             for input_el in input_els:
                 # Find parent form element
