@@ -8,19 +8,21 @@ class Vscanner:
     def __init__(self):
         self.ignored_input_type = ['submit', 'reset', 'button', 'image']
         self.pollute_str = '%26hppollution%3Dtest'
+        self.decoded_str = '&hppollution=test'
         self.vuln_pages = []
 
     def get_vuln_pages(self):
-        return self.get_vuln_pages
+        return self.vuln_pages
 
     def log_vuln_pages(self, grp_type, vuln_url, vuln_param):
         if grp_type == "C":
             str = "Type C: Base Url: " + vuln_url + " has links containing injected paramters"
             self.vuln_pages.append(str)
+
         else:
-            str = "Type " + grp_type + ": Base Url: " + vuln_url + " Polluted Parameter: " + vuln_param
-                    + " [Page has links containing injected parameters]"
+            str = "Type " + grp_type + ": Base Url: " + vuln_url + " Polluted Parameter: " + vuln_param + " [Page has links containing injected parameters]"
             self.vuln_pages.append(str)
+
 
     def test_page(self, crafted_url, driver):
         driver.get(crafted_url)
@@ -29,14 +31,14 @@ class Vscanner:
         soup = BeautifulSoup(html, "html.parser")
 
         for link in soup.find_all('a'):
-            if link.has_attr('href') and self.pollute_str in link.get('href'):
+            print("Test page [" + crafted_url +"] with href: " + str(link.get('href')))
+            if link.has_attr('href') and self.decoded_str in link.get('href'):
                 return True
 
         forms = soup.find_all('form')
 
         for form in forms:
-            body_params = {}
-            if form.has_attr('action') and self.pollute_str in form.get('action'):
+            if form.has_attr('action') and self.decoded_str in form.get('action'):
                 return True
 
         return False
@@ -61,25 +63,42 @@ class Vscanner:
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
 
-        url_params = parse_qs(urlparse(curr_url).query)
+        url_params = parse_qs(urlparse(url).query)
+
+        for k,v in url_params.items():
+            if len(v) > 0:
+                url_params[k] = v[0]
+            else:
+                url_params[k] = "test123"
         body_params = {}
 
         for link in soup.find_all('a'):
-            if link.has_attr('href') and not urlparse(link.get('href')).query:
-                body_params.update(parse_qs(urlparse(link.get('href')).query))
+            if link.has_attr('href') and urlparse(link.get('href')).query:
+                param_dict = parse_qs(urlparse(link.get('href')).query)
+                for k,v in param_dict.items():
+                    if k not in body_params and len(v) > 0:
+                        body_params[k] = v[0]
+                    elif k not in body_params and len(v) == 0:
+                        body_params[k] = "test123"
 
         forms = soup.find_all('form')
 
         for form in forms:
-            if form.has_attr('action') and not urlparse(form.get('action')).query:
-                body_params.update(parse_qs(urlparse(form.get('action')).query))
+            if form.has_attr('action') and urlparse(form.get('action')).query:
+                param_dict = parse_qs(urlparse(form.get('action')).query)
+                for k,v in param_dict.items():
+                    if k not in body_params and len(v) > 0:
+                        body_params[k] = v[0]
+                    elif k not in body_params and len(v) == 0:
+                        body_params[k] = "test123"
 
             for input in form.find_all('input'):
                 input_type = input.get('type')
                 if input_type in self.ignored_input_type:
                     continue
                 if input.has_attr('name'):
-                    body_params.update({input['name']: input.get('value', '')})
+                    body_params.update({input['name']: input.get('value', 'test123')})
+
 
         # After extraction, form into 3 groups
         group_a = {k:v for k,v in url_params.items() if k in body_params}
@@ -93,32 +112,35 @@ class Vscanner:
         for k,v in group_a.items():
             crafted_str = str(k) + '=' + str(v) + self.pollute_str
             crafted_url = base_url + '?' + crafted_str
-            for name,val in url_params:
+            for name,val in url_params.items():
                 if name != k:
                     crafted_url = crafted_url + '&' + str(k) + '=' + str(v)
-                if test_page(self, crafted_url, driver):
-                    log_vuln_pages(self, 'A', base_url, name)
+
+                if self.test_page(crafted_url, driver):
+                    self.log_vuln_pages('A', base_url, name)
 
         for k,v in group_b.items():
             crafted_str = str(k) + '=' + str(v) + self.pollute_str
             crafted_url = base_url + '?' + crafted_str
-            for name,val in url_params:
+            for name,val in url_params.items():
                 if name != k:
                     crafted_url = crafted_url + '&' + str(k) + '=' + str(v)
-                if test_page(self, crafted_url, driver):
-                    log_vuln_pages(self, 'B', base_url, name)
+
+                if self.test_page(crafted_url, driver):
+                    self.log_vuln_pages('B', base_url, name)
 
         # Add all parameters in c into 1 single URL
-        crafted_url = base_url + '?'
-        for k,v in group_c.items():
-            crafted_str = str(k) + '=' + str(v)
-            if crafted_url[-1] == '?':
-                crafted_url = crafted_url + crafted_str
-            else:
-                crafted_url = crafted_url + '&' + crafted_str
-        crafted_url = crafted_url + self.pollute_str
-        if test_page(self, crafted_url, driver):
-            log_vuln_pages(self, 'C', base_url, 'NIL')
+        if len(group_c) > 0:
+            crafted_url = base_url + '?'
+            for k,v in group_c.items():
+                crafted_str = str(k) + '=' + str(v)
+                if crafted_url[-1] == '?':
+                    crafted_url = crafted_url + crafted_str
+                else:
+                    crafted_url = crafted_url + '&' + crafted_str
+            crafted_url = crafted_url + self.pollute_str
+            if self.test_page(crafted_url, driver):
+                self.log_vuln_pages('C', base_url, 'NIL')
 
         driver.close()
         driver.switch_to.window(driver.window_handles[-1])
