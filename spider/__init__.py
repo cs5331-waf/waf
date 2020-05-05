@@ -6,6 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from urllib.parse import urlparse
 
 import fuzzer
+import vscanner
 from spider.util import construct_full_url
 import vul_database
 
@@ -14,6 +15,7 @@ class Spider:
     def __init__(self, driver_path="C:/Program Files (x86)/Google/Chrome/Application/"
                                    "chromedriver_win32/chromedriver.exe"):
         self.fuzzer = fuzzer.Fuzzer()
+        self.vscanner = vscanner.Vscanner()
         options = webdriver.ChromeOptions()
         prefs = {
             "download.open_pdf_in_system_reader": False,
@@ -78,6 +80,7 @@ class Spider:
 
         try:
             self.driver.get(url)
+            self.vscanner.vscan(url, self.driver)
             input_els = self.driver.find_elements_by_tag_name("input")
             input_els_to_fuzz = []
 
