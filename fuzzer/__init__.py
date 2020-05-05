@@ -15,7 +15,7 @@ class Fuzzer:
         ]
 
         self.err_msgs = [r".*Exception:", r".*Error: 'list'"]
-        self.invalid_input_type = ["button", "hidden", "image", "submit", 'checkbox', 'radio']
+
         self.values = ["var1", "var2"]
         # Values that are more human in nature that are more suitable for search bars
         self.search_bar_val = ["overview", "references"]
@@ -39,9 +39,7 @@ class Fuzzer:
         result = None
 
         for input_el in input_els:
-            input_type = input_el.get_attribute("type")
-            if input_type not in self.invalid_input_type:
-                para_name_list.append(input_el.get_attribute("name"))
+            para_name_list.append(input_el.get_attribute("name"))
 
         # We iterate through all the parameters choosing 1 at each iteration
         for para_name in para_name_list:

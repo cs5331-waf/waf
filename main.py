@@ -15,7 +15,7 @@ def main(config):
     web_app_config, vul_pages = app_spider.crawl(config["APP_ADDRESS"], cred)
 
     print(web_app_config)
-    print("Pages vulnerable to HPP are: ", vul_pages)
+    print("Precedence is derived from the following pages: ", vul_pages)
     app_spider.teardown()
     print(time.asctime(), "WAF finished crawling")
 

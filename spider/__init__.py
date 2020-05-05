@@ -1,6 +1,7 @@
 import requests
 from collections import defaultdict
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from urllib.parse import urlparse
 
@@ -23,6 +24,7 @@ class Spider:
             "prefs", prefs
         )
         self.driver = webdriver.Chrome(executable_path=driver_path, options=options)
+        self.invalid_input_type = ["button", "hidden", "image", "submit", 'checkbox', 'radio']
 
     def teardown(self):
         self.driver.close()
@@ -44,6 +46,7 @@ class Spider:
         while len(url_q) > 0:
             try:
                 url = url_q.pop()
+                print("Visiting: ", url)
                 visited_url_list.add(url)
                 sites_found, vul_found = self.scrape_page(parsed_base_url, url, cred)
                 for site in sites_found:
@@ -71,13 +74,25 @@ class Spider:
         """
         sites_found = []
         config_found = util.VulPage(None, None, None)
+        form_method = "get"
 
         try:
             self.driver.get(url)
             input_els = self.driver.find_elements_by_tag_name("input")
+            input_els_to_fuzz = []
+
             for input_el in input_els:
+                input_type = input_el.get_attribute("type")
+                if input_type not in self.invalid_input_type:
+                    input_els_to_fuzz.append(input_el)
+
+            for input_el in input_els_to_fuzz:
                 # Find parent form element
-                form_method = input_el.find_element_by_xpath("//form[1]").get_attribute("method")
+                try:
+                    form_method = input_el.find_element_by_xpath("//form[1]").get_attribute("method")
+                except NoSuchElementException:
+                    print("Form element not found")
+
                 if "user" in input_el.get_attribute("name"):
                     input_el.clear()
                     input_el.send_keys(cred["USER_NAME"])
@@ -87,7 +102,7 @@ class Spider:
                 elif "submit" in input_el.get_attribute("type"):
                     input_el.click()
                 else:
-                    result = self.fuzzer.hpp_fuzz(self.driver, url, input_els, form_method)
+                    result = self.fuzzer.hpp_fuzz(self.driver, url, input_els_to_fuzz, form_method)
                     if result:
                         config_found = util.VulPage(result[0], result[1], url)
                     break
