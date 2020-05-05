@@ -3,6 +3,8 @@
 Tested using Python 3.6.4. Our web app spider which looks for input elements within the web application 
 and crafts payloads to test the configuration of the server.  
 
+Note: This WAF works only on Windows and not Linux.
+
 ### Requirements
 Below are the python packages required:
 * `werkzeug`
